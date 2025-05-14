@@ -1,5 +1,4 @@
-﻿using DeliveryApp.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-
+using DelAPI;
 namespace DeliveryApp.View
 {
     /// <summary>
@@ -21,6 +20,7 @@ namespace DeliveryApp.View
     public partial class Edit : Window
     {
         private Delivery delivery;
+        public Delivery Delivery { get; set; }
         public Edit(Delivery currentDelivery)
         {
             delivery = currentDelivery;
@@ -32,7 +32,7 @@ namespace DeliveryApp.View
             ClientName.Text = delivery.ClientName;
             CargoDescription.Text = delivery.CargoDescription;
             DeliveryAddress.Text = delivery.DeliveryAddress;
-            DeliveryTime.SelectedDate = delivery.DeliveryTime;
+            DeliveryTime.SelectedDate = DateTime.Parse(delivery.DeliveryTime.ToString());
             Status.Text = delivery.Status;
             CargoDescription.Text = delivery.CargoDescription;
         }
@@ -54,6 +54,7 @@ namespace DeliveryApp.View
                     return; 
                 }
             }
+            Delivery = delivery;
             DialogResult = true;
             Close();
         }

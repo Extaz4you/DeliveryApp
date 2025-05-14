@@ -1,5 +1,4 @@
-﻿using DeliveryApp.Models;
-using DeliveryApp.View;
+﻿using DeliveryApp.View;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +14,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-
+using DelAPI;
+using System.Net.Http;
 namespace DeliveryApp
 {
     /// <summary>
@@ -23,11 +23,28 @@ namespace DeliveryApp
     /// </summary>
     public partial class MainWindow : Window
     {
+        // nswag openapi2csclient /input:http://localhost:3333/swagger/v1/swagger.json /output:DeliveryApiService.cs /namespace:DelAPI
+        // docker-compose up -d --build
+
+        private readonly HttpClient _httpClient;
+        private readonly string _baseAddress = "http://localhost:3333";
         public MainWindow()
         {
             InitializeComponent();
+            _httpClient = new HttpClient();
+            Load();
         }
-
+        private void Load()
+        {
+            Deliveries.Items.Clear();
+            var cl = new Client(_baseAddress, _httpClient);
+            var list = cl.ShowAllDeliveriesAsync().Result;
+            foreach (var item in list)
+            {
+                Deliveries.Items.Add(item);
+            }
+            Deliveries.Items.Refresh();
+        }
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             var addView = new Add();
@@ -36,11 +53,12 @@ namespace DeliveryApp
                 var newDelivery = addView.NewDelivery;
                 if (newDelivery != null)
                 {
-                    Deliveries.Items.Add(newDelivery);
-                    Deliveries.Items.Refresh();
+                    var cl = new Client(_baseAddress, _httpClient);
+                    cl.AddNewDeliveryAsync(newDelivery);
                 }
                 MessageBox.Show("Данные успешно добавлены");
             }
+            Load();
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
@@ -57,11 +75,15 @@ namespace DeliveryApp
                 return;
             }
 
-            var addView = new Edit(selectedDelivery);
-            if (addView.ShowDialog() == true)
+            var editView = new Edit(selectedDelivery);
+            if (editView.ShowDialog() == true)
             {
-                Deliveries.Items.Refresh();
+                var changesDelivery = editView.Delivery;
+                var cl = new Client(_baseAddress, _httpClient);
+                MessageBox.Show(changesDelivery.ClientName);
+                cl.ChangeDeliveryAsync(changesDelivery);
                 MessageBox.Show("Данные успешно изменены.");
+                Load();
             }
         }
 
@@ -81,6 +103,8 @@ namespace DeliveryApp
             {
                 Deliveries.Items.Remove(selectedDelivery);
                 Deliveries.Items.Refresh();
+                var cl = new Client(_baseAddress, _httpClient);
+                cl.RemoveNewDeliveryAsync(selectedDelivery.Id);
                 MessageBox.Show("Удалено");
             }
             else
@@ -103,9 +127,10 @@ namespace DeliveryApp
                 MessageBox.Show("Пожалуйста, выберите строку для изменения.");
                 return;
             }
-            selectedDelivery.Status = "Передано на выполнение";
-            Deliveries.Items.Refresh();
+            var cl = new Client(_baseAddress, _httpClient);
+            var list = cl.NextStageAsync(selectedDelivery.Id);
             MessageBox.Show("Отправлено на следующую стадию");
+            Load();
         }
     }
 }
