@@ -64,7 +64,7 @@ namespace DeliveryApp
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedDelivery = Deliveries.SelectedItem as Delivery;
-            if(selectedDelivery.Status == "Новая")
+            if (selectedDelivery.Status == "Новая")
             {
                 MessageBox.Show("На данной стадии изменить нельзя");
                 return;
@@ -114,10 +114,7 @@ namespace DeliveryApp
 
         }
 
-        private void SearchButton_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Поиск выполнен");
-        }
+
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
@@ -131,6 +128,15 @@ namespace DeliveryApp
             var list = cl.NextStageAsync(selectedDelivery.Id);
             MessageBox.Show("Отправлено на следующую стадию");
             Load();
+        }
+
+        private void SerchByText_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+            if (string.IsNullOrEmpty(SerchByText.Text)) Load();
+            else
+            {
+            }
         }
     }
 }

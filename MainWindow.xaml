@@ -27,7 +27,7 @@
             <Button Content="Добавить" Margin="10" Height="25" Click="AddButton_Click"/>
             <Button Content="Изменить" Margin="10" Height="25" Click="EditButton_Click"/>
             <Button Content="Удалить" Margin="10" Height="25" Click="DeleteButton_Click"/>
-            <Button Content="Поиск по тексту" Margin="10" Height="25" Click="SearchButton_Click"/>
+            <TextBox x:Name="SerchByText" Margin="10" Height="25" TextChanged="SerchByText_TextChanged"/>
             <Button Margin="10" Height="45" Click="SendButton_Click" >
                 <TextBlock Text="Отправить на следующую стадию"  TextWrapping="Wrap"/>
             </Button>
