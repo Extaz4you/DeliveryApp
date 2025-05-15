@@ -499,9 +499,9 @@ namespace DelAPI
         /// <param name="text">Текст для поиска по доставкам.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Delivery>> DeliveryAllAsync(string text, string id)
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Delivery>> GetDeliveryByTextAsync(string text)
         {
-            return DeliveryAllAsync(text, id, System.Threading.CancellationToken.None);
+            return GetDeliveryByTextAsync(text, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -511,10 +511,10 @@ namespace DelAPI
         /// <param name="text">Текст для поиска по доставкам.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Delivery>> DeliveryAllAsync(string text, string id, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Delivery>> GetDeliveryByTextAsync(string text, System.Threading.CancellationToken cancellationToken)
         {
-            if (id == null)
-                throw new System.ArgumentNullException("id");
+            if (text == null)
+                throw new System.ArgumentNullException("text");
 
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -527,15 +527,9 @@ namespace DelAPI
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "Delivery/{id}"
-                    urlBuilder_.Append("Delivery/");
-                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
-                    urlBuilder_.Append('?');
-                    if (text != null)
-                    {
-                        urlBuilder_.Append(System.Uri.EscapeDataString("text")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(text, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
-                    }
-                    urlBuilder_.Length--;
+                    // Operation Path: "Delivery/GetDeliveryByText/{text}"
+                    urlBuilder_.Append("Delivery/GetDeliveryByText/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(text, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
 

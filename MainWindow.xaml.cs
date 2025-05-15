@@ -23,28 +23,40 @@ namespace DeliveryApp
     /// </summary>
     public partial class MainWindow : Window
     {
-        // nswag openapi2csclient /input:http://localhost:3333/swagger/v1/swagger.json /output:DeliveryApiService.cs /namespace:DelAPI
-        // docker-compose up -d --build
-
         private readonly HttpClient _httpClient;
         private readonly string _baseAddress = "http://localhost:3333";
+        private Client cl;
+
         public MainWindow()
         {
             InitializeComponent();
             _httpClient = new HttpClient();
+            cl = new Client(_baseAddress, _httpClient);
             Load();
         }
+
         private void Load()
         {
-            Deliveries.Items.Clear();
-            var cl = new Client(_baseAddress, _httpClient);
-            var list = cl.ShowAllDeliveriesAsync().Result;
-            foreach (var item in list)
+            try
             {
-                Deliveries.Items.Add(item);
+                Deliveries.Items.Clear();
+                var list = cl.ShowAllDeliveriesAsync().Result;
+                if (list.Any())
+                {
+                    foreach (var item in list)
+                    {
+                        Deliveries.Items.Add(item);
+                    }
+                    Deliveries.Items.Refresh();
+                }
             }
-            Deliveries.Items.Refresh();
+            catch (HttpRequestException)
+            {
+                MessageBox.Show("Соединение не установлено. Проверьте подключение к серверу.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
+            }
         }
+
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
             var addView = new Add();
@@ -53,25 +65,32 @@ namespace DeliveryApp
                 var newDelivery = addView.NewDelivery;
                 if (newDelivery != null)
                 {
-                    var cl = new Client(_baseAddress, _httpClient);
-                    cl.AddNewDeliveryAsync(newDelivery);
+                    try
+                    {
+                        cl.AddNewDeliveryAsync(newDelivery);
+                        MessageBox.Show("Данные успешно добавлены");
+                    }
+                    catch (HttpRequestException)
+                    {
+                        MessageBox.Show("Соединение не установлено. Проверьте подключение к серверу.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                        Application.Current.Shutdown();
+                    }
                 }
-                MessageBox.Show("Данные успешно добавлены");
+                Load();
             }
-            Load();
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedDelivery = Deliveries.SelectedItem as Delivery;
-            if (selectedDelivery.Status == "Новая")
-            {
-                MessageBox.Show("На данной стадии изменить нельзя");
-                return;
-            }
             if (selectedDelivery == null)
             {
                 MessageBox.Show("Пожалуйста, выберите строку для изменения.");
+                return;
+            }
+            if (selectedDelivery.Status == "Новая")
+            {
+                MessageBox.Show("На данной стадии изменить нельзя");
                 return;
             }
 
@@ -79,10 +98,16 @@ namespace DeliveryApp
             if (editView.ShowDialog() == true)
             {
                 var changesDelivery = editView.Delivery;
-                var cl = new Client(_baseAddress, _httpClient);
-                MessageBox.Show(changesDelivery.ClientName);
-                cl.ChangeDeliveryAsync(changesDelivery);
-                MessageBox.Show("Данные успешно изменены.");
+                try
+                {
+                    cl.ChangeDeliveryAsync(changesDelivery);
+                    MessageBox.Show("Данные успешно изменены.");
+                }
+                catch (HttpRequestException)
+                {
+                    MessageBox.Show("Соединение не установлено. Проверьте подключение к серверу.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Application.Current.Shutdown();
+                }
                 Load();
             }
         }
@@ -101,20 +126,20 @@ namespace DeliveryApp
                                             MessageBoxImage.Warning);
             if (answer == MessageBoxResult.Yes)
             {
-                Deliveries.Items.Remove(selectedDelivery);
-                Deliveries.Items.Refresh();
-                var cl = new Client(_baseAddress, _httpClient);
-                cl.RemoveNewDeliveryAsync(selectedDelivery.Id);
-                MessageBox.Show("Удалено");
+                try
+                {
+                    Deliveries.Items.Remove(selectedDelivery);
+                    Deliveries.Items.Refresh();
+                    cl.RemoveNewDeliveryAsync(selectedDelivery.Id);
+                    MessageBox.Show("Удалено");
+                }
+                catch (HttpRequestException)
+                {
+                    MessageBox.Show("Соединение не установлено. Проверьте подключение к серверу.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Application.Current.Shutdown();
+                }
             }
-            else
-            {
-                return;
-            }
-
         }
-
-
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
         {
@@ -124,18 +149,45 @@ namespace DeliveryApp
                 MessageBox.Show("Пожалуйста, выберите строку для изменения.");
                 return;
             }
-            var cl = new Client(_baseAddress, _httpClient);
-            var list = cl.NextStageAsync(selectedDelivery.Id);
-            MessageBox.Show("Отправлено на следующую стадию");
+            try
+            {
+                cl.NextStageAsync(selectedDelivery.Id);
+                MessageBox.Show("Отправлено на следующую стадию");
+            }
+            catch (HttpRequestException)
+            {
+                MessageBox.Show("Соединение не установлено. Проверьте подключение к серверу.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                Application.Current.Shutdown();
+            }
             Load();
         }
 
         private void SerchByText_TextChanged(object sender, TextChangedEventArgs e)
         {
-
-            if (string.IsNullOrEmpty(SerchByText.Text)) Load();
+            if (string.IsNullOrEmpty(SerchByText.Text))
+            {
+                Load();
+            }
             else
             {
+                try
+                {
+                    var list = cl.GetDeliveryByTextAsync(SerchByText.Text).Result;
+                    if (list.Any())
+                    {
+                        Deliveries.Items.Clear();
+                        foreach (var item in list)
+                        {
+                            Deliveries.Items.Add(item);
+                        }
+                        Deliveries.Items.Refresh();
+                    }
+                }
+                catch (HttpRequestException)
+                {
+                    MessageBox.Show("Соединение не установлено. Проверьте подключение к серверу.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    Application.Current.Shutdown(); 
+                }
             }
         }
     }
